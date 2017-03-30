@@ -1,16 +1,17 @@
-module Estruturas.Peso
-where
+module Estruturas.Peso(
+    Peso(..)
+) where
 
-data Peso = Nil
+data Peso = SemPeso
           | Infinito 
-          | Valor Int
+          | Peso Int
           deriving (Show, Eq)
 
 instance Ord Peso where
-    Nil       `compare` Nil       = EQ
-    Nil       `compare` _         = LT
-    Infinito  `compare` Infinito  = EQ
-    Infinito  `compare` _         = GT
-    (Valor x) `compare` (Valor y) = x `compare` y
-    (Valor _) `compare` Nil       = GT
-    (Valor _) `compare` Infinito  = LT
+    SemPeso  `compare` SemPeso  = EQ
+    SemPeso  `compare` _        = LT
+    Infinito `compare` Infinito = EQ
+    Infinito `compare` _        = GT
+    (Peso x) `compare` (Peso y) = x `compare` y
+    (Peso _) `compare` SemPeso  = GT
+    (Peso _) `compare` Infinito = LT

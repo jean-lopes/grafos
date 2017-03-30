@@ -1,4 +1,6 @@
 module Estruturas.Aresta(
+    module Estruturas.Vertice,
+    module Estruturas.Peso,
     Aresta(..),
     Peso(..),
     Arestas

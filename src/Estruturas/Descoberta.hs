@@ -1,5 +1,9 @@
-module Estruturas.Descoberta
-where
+module Estruturas.Descoberta(
+    Descoberta(..),
+    desconhecido,
+    visitado,
+    completo,
+)where
 
 data Descoberta = Desconhecido
                 | Visitado
