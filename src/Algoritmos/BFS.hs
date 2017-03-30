@@ -3,7 +3,7 @@ module Algoritmos.BFS(
 ) where
 import qualified Data.Set as Set
 import qualified Data.Map.Strict as Map
-import qualified Data.Queue as Queue
+import qualified Data.List as List
 import Estruturas.Grafo
 import Estruturas.VetorRoteamento
 import Estruturas.ListaAdjacencia
@@ -11,14 +11,6 @@ import qualified Estruturas.Distancia as D
 import qualified Estruturas.Pai as P
 
 type Fim = Bool
-
--- Fila usando Listas
-pop :: [a] -> Maybe (a, [a])
-pop []     = Nothing
-pop (x:xs) = Just (x, xs)
-
-push :: a -> [a] -> [a]
-push x xs = xs ++ [x]
 
 data Estado = Estado { adjacentes :: ListaAdjacencia 
                      , fila       :: [Vertice]
@@ -36,26 +28,27 @@ inicializar :: Grafo -> VetorRoteamento
 inicializar g = Map.fromList $ zip vs itens
     where createItem = \_ -> ItemVetor D.Infinito P.Nil Desconhecido
           itens = map createItem vs 
-          vs = Set.toList $ vertices g
-
-bfs :: Vertice -> Grafo -> VetorRoteamento
-bfs v g = Map.fromList []
-    where vr = inicializar g
-          s = [v]
+          vs= Set.toList $ vertices g
 
 passo :: Estado -> (Fim, Estado)
-passo (Estado ls [] vs)     = (True , Estado ls [] vs)
-passo (Estado ls (q:qs) vs) = (False, Estado ls qs vs)
+passo e@(Estado _ [] _)       = (True , e)
+passo e@(Estado ls (q:qs) vs) = (False, ks { vetor = os })
     where as = ls Map.! q
-          v = vs Map.! q
+          p = P.Pai q
+          ks = Set.foldl (visitar p) e { fila = qs } as
+          os = Map.adjust (\x-> x { descoberta = Completo }) q $ vetor ks
 
-visitar :: Pai -> (Vertice, ItemVetor) -> VetorRoteamento -> VetorRoteamento
-visitar p (v, iv) vr = adjust vr
-    where (ItemVetor dist p desc) = vr Map.! v
-          novaDist = incDist $ distPai p vr
-          novoItem = if desc == Desconhecido
-                        then ItemVetor novaDist p Visitado 
-                        else iv
-}
+loop :: Estado -> Estado
+loop estado = if fim then novoEstado else loop novoEstado
+    where (fim, novoEstado) = passo estado
 
+visitar :: Pai -> Estado -> Vertice -> Estado
+visitar p (Estado ls qs vr) v = Estado ls novaFila $ Map.adjust f v vr
+    where novo = desconhecido $ descoberta $ vr Map.! v
+          novoItem = ItemVetor d p Visitado 
+          novaFila = if novo then qs ++ [v] else qs
+          d = incDist $ distPai p vr
+          f = \x -> if novo then novoItem else x
 
+bfs :: Vertice -> Grafo -> VetorRoteamento
+bfs v g = vetor . loop $ estadoInicial g v
