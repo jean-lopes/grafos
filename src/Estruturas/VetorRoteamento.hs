@@ -4,15 +4,16 @@ module Estruturas.VetorRoteamento(
     distPai,
     mostrar,
     caminhoPara,
-    arvore
+    floresta,
+    mostrarFloresta,
 ) where
+import Data.Tree
 import Data.List
 import qualified Data.Map.Strict as Map
 import Estruturas.Pai
 import Estruturas.Distancia
 import Estruturas.Descoberta
 import Estruturas.Vertice
-import Estruturas.Arvore
 
 type VetorRoteamento = Map.Map Vertice ItemVetor
 
@@ -39,14 +40,27 @@ caminhoPara' vr v cs = if b && p == Nil then v:cs else c
           f Nil     = ""
           f (Pai x) = x
 
-arvore :: VetorRoteamento -> [Arvore]
-arvore vr = map (\v -> arvore' vr v $ singleton v) vs
-    where vs = Map.keys $ Map.filter (\(ItemVetor _ p _) -> p == Nil) vr    
+mostrarFloresta :: Forest Vertice -> IO ()
+mostrarFloresta fs = putStrLn $ drawForest fs
 
-arvore' :: VetorRoteamento -> Vertice -> Arvore -> Arvore
-arvore' vr v a = adicionarFilhos a v as
+criarArvore :: Vertice -> Tree Vertice
+criarArvore x = Node x []
+
+adicionarFilhos :: Tree Vertice -> Vertice -> [Tree Vertice] -> Tree Vertice
+adicionarFilhos a@(Node x fs) y zs = if x == y 
+                                        then a { subForest = fs ++ zs }
+                                        else if null fs 
+                                                then a
+                                                else adicionarFilhos a { subForest = tail fs } y zs
+
+floresta :: VetorRoteamento -> Forest Vertice
+floresta vr = map (\v -> arvore vr v $ criarArvore v) vs
+    where vs = Map.keys $ Map.filter (\(ItemVetor _ p _) -> p == Nil) vr
+
+arvore :: VetorRoteamento -> Vertice -> Tree Vertice -> Tree Vertice
+arvore vr v a = adicionarFilhos a v as
     where fs = Map.keys $ Map.filter (filho v) vr
-          as = map (\f -> arvore' vr f $ singleton f) fs
+          as = map (\f -> arvore vr f $ criarArvore f) fs
 
 filho :: Vertice -> ItemVetor -> Bool
 filho _ (ItemVetor _ Nil     _) = False
